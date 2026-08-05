@@ -1,0 +1,45 @@
+// src/components/Footer/Footer.module.scss
+
+.footer {
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-sidebar);
+  backdrop-filter: blur(12px);
+  padding: .75rem 2rem;
+  flex-shrink: 0;
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: .05rem;
+}
+
+.label {
+  font-size: .62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .5px;
+  color: var(--text-muted);
+}
+
+.value        { font-size: .88rem; font-weight: 800; color: var(--text-primary); }
+.valueIncome  { font-size: .88rem; font-weight: 800; color: var(--accent-success); }
+.valueExpense { font-size: .88rem; font-weight: 800; color: var(--accent-danger); }
+
+.copy {
+  margin-left: auto;
+  font-size: .72rem;
+  color: var(--text-muted);
+}
+
+@media (max-width: 900px) {
+  .footer { padding: .6rem 1rem; }
+  .copy   { display: none; }
+}

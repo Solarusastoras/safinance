@@ -1,0 +1,160 @@
+// src/scss/_variables.scss
+// Design tokens — CSS custom properties that match app.js var() usage
+
+$font: 'Plus Jakarta Sans', system-ui, sans-serif;
+$ease: cubic-bezier(.4, 0, .2, 1);
+$tr: .28s $ease;
+
+:root {
+  --bg-app:               #050d1f;
+  --bg-sidebar:           #071628;
+  --bg-card:              rgba(10, 28, 60, 0.82);
+  --bg-card-hover:        rgba(16, 42, 86, 0.92);
+  --bg-input:             rgba(7, 20, 48, 0.9);
+  --bg-modal:             #060f28;
+  --border-color:         rgba(56, 189, 248, 0.2);
+  --border-hover:         rgba(56, 189, 248, 0.5);
+  --border-focus:         #38bdf8;
+  --text-primary:         #ecf8ff;
+  --text-secondary:       #93c5fd;
+  --text-muted:           #4e7098;
+  --accent-primary:       #0ea5e9;
+  --accent-primary-hover: #0369a1;
+  --accent-primary-light: rgba(14, 165, 233, 0.15);
+  --accent-success:       #10b981;
+  --accent-success-light: rgba(16, 185, 129, 0.13);
+  --accent-danger:        #f43f5e;
+  --accent-danger-light:  rgba(244, 63, 94, 0.13);
+  --accent-warning:       #f59e0b;
+  --accent-warning-light: rgba(245, 158, 11, 0.13);
+  --accent-info:          #06b6d4;
+  --accent-info-light:    rgba(6, 182, 212, 0.13);
+  --shadow-sm:   0 2px 8px rgba(0,0,0,.4);
+  --shadow-md:   0 6px 24px rgba(0,0,0,.55);
+  --shadow-lg:   0 18px 52px rgba(0,0,0,.7);
+  --shadow-glow: 0 0 30px rgba(14, 165, 233, 0.4);
+  --radius-sm:   8px;
+  --radius-md:   14px;
+  --radius-lg:   20px;
+  --radius-full: 9999px;
+  --transition:  #{$tr};
+}
+
+[data-theme="dark"] {
+  --bg-app:               #07090f;
+  --bg-sidebar:           #0d1117;
+  --bg-card:              rgba(21, 28, 42, 0.82);
+  --bg-card-hover:        rgba(28, 38, 56, 0.95);
+  --bg-input:             #151c2a;
+  --bg-modal:             #0d1117;
+  --border-color:         rgba(255,255,255,.07);
+  --border-hover:         rgba(255,255,255,.18);
+  --border-focus:         #6366f1;
+  --text-primary:         #f1f5f9;
+  --text-secondary:       #94a3b8;
+  --text-muted:           #4b5563;
+  --accent-primary:       #6366f1;
+  --accent-primary-hover: #4f46e5;
+  --accent-primary-light: rgba(99, 102, 241, 0.15);
+  --shadow-glow: 0 0 28px rgba(99, 102, 241, 0.35);
+}
+
+[data-theme="light"] {
+  --bg-app:               #f0f4f8;
+  --bg-sidebar:           #ffffff;
+  --bg-card:              rgba(255,255,255,.94);
+  --bg-card-hover:        #ffffff;
+  --bg-input:             #f1f5f9;
+  --bg-modal:             #ffffff;
+  --border-color:         rgba(0,0,0,.07);
+  --border-hover:         rgba(0,0,0,.14);
+  --border-focus:         #6366f1;
+  --text-primary:         #0f172a;
+  --text-secondary:       #475569;
+  --text-muted:           #94a3b8;
+  --accent-primary:       #6366f1;
+  --accent-primary-hover: #4f46e5;
+  --accent-primary-light: rgba(99, 102, 241, 0.12);
+  --shadow-sm:   0 1px 4px rgba(0,0,0,.05);
+  --shadow-md:   0 4px 16px rgba(0,0,0,.07);
+  --shadow-lg:   0 12px 32px rgba(0,0,0,.09);
+  --shadow-glow: 0 0 24px rgba(99, 102, 241, 0.18);
+}
+
+// ── Thème Forêt (vert profond) ────────────────────────────
+[data-theme="forest"] {
+  --bg-app:               #0a130d;
+  --bg-sidebar:           #0d1a10;
+  --bg-card:              rgba(18, 40, 22, 0.85);
+  --bg-card-hover:        rgba(25, 55, 30, 0.95);
+  --bg-input:             rgba(12, 28, 15, 0.9);
+  --bg-modal:             #0d1a10;
+  --border-color:         rgba(74, 222, 128, 0.18);
+  --border-hover:         rgba(74, 222, 128, 0.45);
+  --border-focus:         #4ade80;
+  --text-primary:         #ecfdf5;
+  --text-secondary:       #86efac;
+  --text-muted:           #4d7a5a;
+  --accent-primary:       #22c55e;
+  --accent-primary-hover: #16a34a;
+  --accent-primary-light: rgba(34, 197, 94, 0.15);
+  --accent-success:       #4ade80;
+  --accent-success-light: rgba(74, 222, 128, 0.13);
+  --accent-danger:        #f87171;
+  --accent-danger-light:  rgba(248, 113, 113, 0.13);
+  --accent-warning:       #fbbf24;
+  --accent-warning-light: rgba(251, 191, 36, 0.13);
+  --shadow-glow: 0 0 30px rgba(34, 197, 94, 0.4);
+}
+
+// ── Thème Sunset (orange/rose ardent) ────────────────────
+[data-theme="sunset"] {
+  --bg-app:               #0f0a06;
+  --bg-sidebar:           #180e08;
+  --bg-card:              rgba(40, 22, 10, 0.85);
+  --bg-card-hover:        rgba(55, 30, 12, 0.95);
+  --bg-input:             rgba(28, 15, 7, 0.9);
+  --bg-modal:             #180e08;
+  --border-color:         rgba(251, 146, 60, 0.2);
+  --border-hover:         rgba(251, 146, 60, 0.5);
+  --border-focus:         #fb923c;
+  --text-primary:         #fff7ed;
+  --text-secondary:       #fdba74;
+  --text-muted:           #7a4a2a;
+  --accent-primary:       #f97316;
+  --accent-primary-hover: #ea580c;
+  --accent-primary-light: rgba(249, 115, 22, 0.15);
+  --accent-success:       #a3e635;
+  --accent-success-light: rgba(163, 230, 53, 0.13);
+  --accent-danger:        #fb7185;
+  --accent-danger-light:  rgba(251, 113, 133, 0.13);
+  --accent-warning:       #fde047;
+  --accent-warning-light: rgba(253, 224, 71, 0.13);
+  --shadow-glow: 0 0 32px rgba(249, 115, 22, 0.45);
+}
+
+// ── Thème Galaxie (violet cosmique) ──────────────────────
+[data-theme="galaxy"] {
+  --bg-app:               #05030f;
+  --bg-sidebar:           #0a0720;
+  --bg-card:              rgba(22, 14, 50, 0.85);
+  --bg-card-hover:        rgba(32, 20, 68, 0.95);
+  --bg-input:             rgba(14, 9, 36, 0.9);
+  --bg-modal:             #0a0720;
+  --border-color:         rgba(167, 139, 250, 0.18);
+  --border-hover:         rgba(167, 139, 250, 0.45);
+  --border-focus:         #a78bfa;
+  --text-primary:         #f5f0ff;
+  --text-secondary:       #c4b5fd;
+  --text-muted:           #5b4b80;
+  --accent-primary:       #8b5cf6;
+  --accent-primary-hover: #7c3aed;
+  --accent-primary-light: rgba(139, 92, 246, 0.18);
+  --accent-success:       #34d399;
+  --accent-success-light: rgba(52, 211, 153, 0.13);
+  --accent-danger:        #f472b6;
+  --accent-danger-light:  rgba(244, 114, 182, 0.13);
+  --accent-warning:       #fcd34d;
+  --accent-warning-light: rgba(252, 211, 77, 0.13);
+  --shadow-glow: 0 0 36px rgba(139, 92, 246, 0.5);
+}

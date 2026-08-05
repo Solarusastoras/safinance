@@ -139,6 +139,76 @@ function SubscriptionForm({ onClose }) {
   );
 }
 
+// ── History Form / Viewer ──────────────────────────────────
+function HistoryModalContent({ item, onClose }) {
+  const historyList = Array.isArray(item?.history) ? item.history : [];
+
+  const getActionBadge = (action) => {
+    switch (action) {
+      case 'created':
+        return { label: 'Création', color: 'var(--accent-success)', icon: 'plus' };
+      case 'modified':
+        return { label: 'Modification', color: '#818cf8', icon: 'edit' };
+      case 'deleted':
+        return { label: 'Suppression (Corbeille)', color: 'var(--accent-danger)', icon: 'trash' };
+      case 'restored':
+        return { label: 'Restauration', color: 'var(--accent-success)', icon: 'rotate-ccw' };
+      default:
+        return { label: 'Action', color: 'var(--text-muted)', icon: 'clock' };
+    }
+  };
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem' }}>
+      <div style={{ padding: '.85rem', background: 'rgba(255,255,255,0.03)', borderRadius: 8, border: '1px solid var(--border-color)' }}>
+        <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>{item?.title}</div>
+        <div style={{ fontSize: '.84rem', color: 'var(--text-muted)', marginTop: '.25rem' }}>
+          Date: {item?.date} | Montant: {item?.amount} €
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '.85rem' }}>
+        <h4 style={{ fontSize: '.85rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-muted)', margin: 0 }}>
+          Journal chronologique ({historyList.length} action(s))
+        </h4>
+
+        {historyList.length === 0 ? (
+          <p style={{ fontSize: '.88rem', color: 'var(--text-muted)' }}>Aucun historique disponible pour cette transaction.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '.85rem' }}>
+            {historyList.map((h, i) => {
+              const badge = getActionBadge(h.action);
+              return (
+                <div key={i} style={{ display: 'flex', gap: '.85rem', alignItems: 'flex-start', paddingBottom: '.75rem', borderBottom: i < historyList.length - 1 ? '1px dashed var(--border-color)' : 'none' }}>
+                  <div style={{ background: `${badge.color}22`, color: badge.color, borderRadius: '50%', padding: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', minWidth: 28, height: 28 }}>
+                    <Icon name={badge.icon} size={14} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 700, fontSize: '.88rem', color: badge.color }}>{badge.label}</span>
+                      <span style={{ fontSize: '.75rem', color: 'var(--text-muted)' }}>{h.date}</span>
+                    </div>
+                    {h.note && <div style={{ fontSize: '.84rem', color: 'var(--text-secondary)', marginTop: '.15rem' }}>{h.note}</div>}
+                    {h.details && (
+                      <div style={{ fontSize: '.78rem', color: 'var(--text-muted)', marginTop: '.3rem', background: 'rgba(0,0,0,0.2)', padding: '.4rem .6rem', borderRadius: 4 }}>
+                        {h.details}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      <button className="btn-secondary" onClick={onClose} style={{ alignSelf: 'flex-end', marginTop: '.5rem' }}>
+        Fermer
+      </button>
+    </div>
+  );
+}
+
 // ── Modal Manager ─────────────────────────────────────────
 const TITLES = {
   transaction:  item => item ? 'Modifier Transaction' : 'Nouvelle Transaction',
@@ -146,6 +216,7 @@ const TITLES = {
   savings:      () => "Nouveau Projet d'Épargne",
   subscription: () => 'Ajouter un Abonnement',
   deposit:      item => `Déposer sur ${item?.title || ''}`,
+  history:      item => `Historique d'Activité: ${item?.title || ''}`,
 };
 
 export default function Modal() {
@@ -165,7 +236,9 @@ export default function Modal() {
         {modalType === 'savings'      && <SavingsForm      onClose={close} />}
         {modalType === 'deposit'      && <DepositForm      goal={editingItem} onClose={close} />}
         {modalType === 'subscription' && <SubscriptionForm onClose={close} />}
+        {modalType === 'history'      && <HistoryModalContent item={editingItem} onClose={close} />}
       </div>
     </div>
   );
 }
+

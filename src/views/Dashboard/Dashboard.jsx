@@ -11,7 +11,7 @@ export default function Dashboard() {
 
   const categoryExpenses = useMemo(() => {
     const map = {};
-    transactions.filter(t => t.type === 'expense').forEach(t => {
+    transactions.filter(t => !t.isDeleted && t.type === 'expense').forEach(t => {
       map[t.category] = (map[t.category] || 0) + Number(t.amount);
     });
     return Object.entries(map).map(([id, amount]) => {
@@ -122,7 +122,7 @@ export default function Dashboard() {
             <table className="data-table">
               <thead><tr><th>Intitulé</th><th>Catégorie</th><th>Date</th><th>Montant</th></tr></thead>
               <tbody>
-                {transactions.slice(0, 5).map(tx => {
+                {transactions.filter(t => !t.isDeleted).slice(0, 5).map(tx => {
                   const cat = categories.find(c => c.id === tx.category) || { name: 'Général', color: '#94a3b8', icon: 'wallet' };
                   return (
                     <tr key={tx.id}>
@@ -148,7 +148,7 @@ export default function Dashboard() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
             {budgets.slice(0, 4).map(bgt => {
               const cat = categories.find(c => c.id === bgt.categoryId) || { name: 'Cat.', color: '#6366f1' };
-              const spent = transactions.filter(t => t.type === 'expense' && t.category === bgt.categoryId).reduce((s, t) => s + Number(t.amount), 0);
+              const spent = transactions.filter(t => !t.isDeleted && t.type === 'expense' && t.category === bgt.categoryId).reduce((s, t) => s + Number(t.amount), 0);
               const pct = Math.min(100, Math.round((spent / bgt.target) * 100));
               const barColor = pct >= 95 ? 'var(--accent-danger)' : pct > 75 ? 'var(--accent-warning)' : 'var(--accent-success)';
               return (

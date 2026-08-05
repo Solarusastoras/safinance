@@ -12,7 +12,7 @@ export default function Budgets() {
     <div className="budgets-grid">
       {categories.filter(c => c.type === 'expense').map(cat => {
         const bgt = budgets.find(b => b.categoryId === cat.id) || { target: 0 };
-        const spent = transactions.filter(t => t.type === 'expense' && t.category === cat.id).reduce((s, t) => s + Number(t.amount), 0);
+        const spent = transactions.filter(t => !t.isDeleted && t.type === 'expense' && t.category === cat.id).reduce((s, t) => s + Number(t.amount), 0);
         const pct = bgt.target > 0 ? Math.round((spent / bgt.target) * 100) : 0;
         const remaining = bgt.target - spent;
         let status = 'Budget respecté'; let barColor = 'var(--accent-success)';

@@ -24,7 +24,7 @@ export default function Sidebar() {
           <Icon name="wallet" size={22} />
         </div>
         <div className={styles.brandText}>
-          <span className={styles.brandTitle}>SAFinance</span>
+          <span className={styles.brandTitle}>SaFinance</span>
           <span className={styles.brandBadge}>PRO</span>
         </div>
       </div>

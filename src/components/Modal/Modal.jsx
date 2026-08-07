@@ -121,20 +121,49 @@ function DepositForm({ goal, onClose }) {
 }
 
 // ── Subscription Form ─────────────────────────────────────
-function SubscriptionForm({ onClose }) {
-  const { addSubscription } = useFinance();
-  const [name, setName]           = useState('');
-  const [amount, setAmount]       = useState('');
-  const [billingDay, setBilling]  = useState('5');
-  const submit = e => { e.preventDefault(); if (!name || !amount) return; addSubscription({ name, amount: Number(amount), billingDay: Number(billingDay), cycle: 'monthly', icon: 'tv' }); onClose(); };
+function SubscriptionForm({ item, onClose }) {
+  const { addSubscription, updateSubscription } = useFinance();
+  const [name, setName]          = useState(item?.name || '');
+  const [amount, setAmount]      = useState(item?.amount || '');
+  const [billingDay, setBilling] = useState(item?.billingDay || '5');
+
+  const submit = e => {
+    e.preventDefault();
+    if (!name || !amount) return;
+    const subData = {
+      name,
+      amount: Number(amount),
+      billingDay: Number(billingDay),
+      cycle: item?.cycle || 'monthly',
+      icon: item?.icon || 'tv'
+    };
+    if (item) {
+      updateSubscription(item.id, subData);
+    } else {
+      addSubscription(subData);
+    }
+    onClose();
+  };
+
   return (
     <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-      <div className="form-group"><label className="form-label">Nom du Service</label><input className="form-input" type="text" placeholder="ex: Spotify" value={name} onChange={e => setName(e.target.value)} required /></div>
-      <div className="form-row">
-        <div className="form-group"><label className="form-label">Prix Mensuel (€)</label><input className="form-input" type="number" step="0.01" placeholder="9.99" value={amount} onChange={e => setAmount(e.target.value)} required /></div>
-        <div className="form-group"><label className="form-label">Jour du prélèvement</label><input className="form-input" type="number" min="1" max="31" value={billingDay} onChange={e => setBilling(e.target.value)} required /></div>
+      <div className="form-group">
+        <label className="form-label">Nom du Service</label>
+        <input className="form-input" type="text" placeholder="ex: Spotify" value={name} onChange={e => setName(e.target.value)} required />
       </div>
-      <button className="btn-primary" type="submit" style={{ justifyContent: 'center' }}>Ajouter l'abonnement</button>
+      <div className="form-row">
+        <div className="form-group">
+          <label className="form-label">Prix Mensuel (€)</label>
+          <input className="form-input" type="number" step="0.01" placeholder="9.99" value={amount} onChange={e => setAmount(e.target.value)} required />
+        </div>
+        <div className="form-group">
+          <label className="form-label">Jour du prélèvement</label>
+          <input className="form-input" type="number" min="1" max="31" value={billingDay} onChange={e => setBilling(e.target.value)} required />
+        </div>
+      </div>
+      <button className="btn-primary" type="submit" style={{ justifyContent: 'center' }}>
+        {item ? 'Enregistrer les modifications' : "Ajouter l'abonnement"}
+      </button>
     </form>
   );
 }
@@ -214,7 +243,7 @@ const TITLES = {
   transaction:  item => item ? 'Modifier Transaction' : 'Nouvelle Transaction',
   budget:       () => 'Définir un Budget',
   savings:      () => "Nouveau Projet d'Épargne",
-  subscription: () => 'Ajouter un Abonnement',
+  subscription: item => item ? "Modifier l'Abonnement" : 'Ajouter un Abonnement',
   deposit:      item => `Déposer sur ${item?.title || ''}`,
   history:      item => `Historique d'Activité: ${item?.title || ''}`,
 };
@@ -235,7 +264,7 @@ export default function Modal() {
         {modalType === 'budget'       && <BudgetForm       item={editingItem} onClose={close} />}
         {modalType === 'savings'      && <SavingsForm      onClose={close} />}
         {modalType === 'deposit'      && <DepositForm      goal={editingItem} onClose={close} />}
-        {modalType === 'subscription' && <SubscriptionForm onClose={close} />}
+        {modalType === 'subscription' && <SubscriptionForm item={editingItem} onClose={close} />}
         {modalType === 'history'      && <HistoryModalContent item={editingItem} onClose={close} />}
       </div>
     </div>

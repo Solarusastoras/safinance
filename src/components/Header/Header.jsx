@@ -16,7 +16,7 @@ const TAB_TITLES = {
 
 export default function Header() {
   const { theme, setTheme, searchQuery, setSearchQuery, activeTab,
-          setModalType, setIsModalOpen, setEditingItem } = useFinance();
+          setModalType, setIsModalOpen, setEditingItem, lastSaved } = useFinance();
 
   const cycleTheme = () => {
     const next = { metallic: 'dark', dark: 'light', light: 'forest', forest: 'sunset', sunset: 'galaxy', galaxy: 'metallic' };
@@ -41,6 +41,14 @@ export default function Header() {
     setIsModalOpen(true);
   };
 
+  const formattedTime = lastSaved ? (() => {
+    try {
+      return new Date(lastSaved).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    } catch (e) {
+      return '';
+    }
+  })() : '';
+
   return (
     <header className={styles.header}>
       <div className={styles.titleBlock}>
@@ -49,6 +57,11 @@ export default function Header() {
       </div>
 
       <div className={styles.actions}>
+        <div className={styles.saveBadge} title={`Enregistrement automatique en temps réel (Dernière sync : ${formattedTime})`}>
+          <span className={styles.pulseDot} />
+          <span className={styles.saveText}>Sauvegardé</span>
+        </div>
+
         <label className={styles.searchBox}>
           <Icon name="search" size={16} />
           <input
@@ -71,3 +84,4 @@ export default function Header() {
     </header>
   );
 }
+

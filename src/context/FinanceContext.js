@@ -18,12 +18,16 @@ export const FinanceProvider = ({ children }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType]     = useState(null);
   const [editingItem, setEditingItem] = useState(null);
+  const [lastSaved, setLastSaved]     = useState(() => localStorage.getItem('sf_last_saved') || new Date().toISOString());
 
   const [transactions, setTransactions] = useState(() => {
     const s = localStorage.getItem('sf_transactions');
     return s ? JSON.parse(s) : INITIAL_TRANSACTIONS;
   });
-  const [categories] = useState(INITIAL_CATEGORIES);
+  const [categories, setCategories] = useState(() => {
+    const s = localStorage.getItem('sf_categories');
+    return s ? JSON.parse(s) : INITIAL_CATEGORIES;
+  });
   const [budgets, setBudgets] = useState(() => {
     const s = localStorage.getItem('sf_budgets');
     return s ? JSON.parse(s) : INITIAL_BUDGETS;
@@ -37,13 +41,26 @@ export const FinanceProvider = ({ children }) => {
     return s ? JSON.parse(s) : INITIAL_SUBSCRIPTIONS;
   });
 
-  // Sync localStorage
-  useEffect(() => { localStorage.setItem('sf_theme', theme); document.documentElement.setAttribute('data-theme', theme); }, [theme]);
-  useEffect(() => { localStorage.setItem('sf_currency', currency); }, [currency]);
-  useEffect(() => { localStorage.setItem('sf_transactions', JSON.stringify(transactions)); }, [transactions]);
-  useEffect(() => { localStorage.setItem('sf_budgets', JSON.stringify(budgets)); }, [budgets]);
-  useEffect(() => { localStorage.setItem('sf_savings', JSON.stringify(savingsGoals)); }, [savingsGoals]);
-  useEffect(() => { localStorage.setItem('sf_subs', JSON.stringify(subscriptions)); }, [subscriptions]);
+  // Auto-sync localStorage & update lastSaved timestamp
+  useEffect(() => {
+    localStorage.setItem('sf_theme', theme);
+    document.documentElement.setAttribute('data-theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem('sf_currency', currency);
+  }, [currency]);
+
+  useEffect(() => {
+    const now = new Date().toISOString();
+    localStorage.setItem('sf_transactions', JSON.stringify(transactions));
+    localStorage.setItem('sf_categories', JSON.stringify(categories));
+    localStorage.setItem('sf_budgets', JSON.stringify(budgets));
+    localStorage.setItem('sf_savings', JSON.stringify(savingsGoals));
+    localStorage.setItem('sf_subs', JSON.stringify(subscriptions));
+    localStorage.setItem('sf_last_saved', now);
+    setLastSaved(now);
+  }, [transactions, categories, budgets, savingsGoals, subscriptions]);
 
   const formatCurrency = (amount) => {
     const symbols = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF ' };
@@ -180,14 +197,122 @@ export const FinanceProvider = ({ children }) => {
   };
 
   const addSubscription    = (s) => setSubscriptions(p => [{ ...s, id: 'sub-' + Date.now() }, ...p]);
+  const updateSubscription = (id, u) => setSubscriptions(p => p.map(s => s.id === id ? { ...s, ...u } : s));
   const deleteSubscription = (id) => setSubscriptions(p => p.filter(s => s.id !== id));
 
+  // Export JSON Backup
+  const exportDataJSON = () => {
+    const backupData = {
+      version: '1.0',
+      appName: 'SAFinance',
+      exportDate: new Date().toISOString(),
+      settings: { theme, currency },
+      transactions,
+      categories,
+      budgets,
+      savingsGoals,
+      subscriptions,
+    };
+    const jsonString = JSON.stringify(backupData, null, 2);
+    const blob = new Blob([jsonString], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const today = new Date().toISOString().split('T')[0];
+    a.href = url;
+    a.download = `safinance-sauvegarde-${today}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Export CSV Transactions
+  const exportDataCSV = () => {
+    if (!transactions || transactions.length === 0) {
+      alert('Aucune transaction disponible à exporter.');
+      return;
+    }
+    const catMap = categories.reduce((acc, c) => ({ ...acc, [c.id]: c.name }), {});
+    const headers = ['ID', 'Titre', 'Montant (€)', 'Type', 'Catégorie', 'Compte', 'Date', 'Note', 'Corbeille', 'Date Création'];
+    const rows = transactions.map(t => [
+      `"${t.id || ''}"`,
+      `"${(t.title || '').replace(/"/g, '""')}"`,
+      t.amount,
+      `"${t.type === 'income' ? 'Revenu' : 'Dépense'}"`,
+      `"${catMap[t.category] || t.category || ''}"`,
+      `"${t.account || ''}"`,
+      `"${t.date || ''}"`,
+      `"${(t.note || '').replace(/"/g, '""')}"`,
+      t.isDeleted ? 'Oui' : 'Non',
+      `"${t.createdAt || ''}"`
+    ]);
+
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(e => e.join(';'))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const today = new Date().toISOString().split('T')[0];
+    a.href = url;
+    a.download = `safinance-transactions-${today}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Import JSON Backup
+  const importDataJSON = (jsonString) => {
+    try {
+      const parsed = JSON.parse(jsonString);
+      if (!parsed || typeof parsed !== 'object') {
+        throw new Error('Le fichier sélectionné ne contient pas de JSON valide.');
+      }
+
+      let restoredItemsCount = 0;
+      if (parsed.transactions && Array.isArray(parsed.transactions)) {
+        setTransactions(parsed.transactions);
+        restoredItemsCount += parsed.transactions.length;
+      }
+      if (parsed.categories && Array.isArray(parsed.categories)) {
+        setCategories(parsed.categories);
+      }
+      if (parsed.budgets && Array.isArray(parsed.budgets)) {
+        setBudgets(parsed.budgets);
+      }
+      if (parsed.savingsGoals && Array.isArray(parsed.savingsGoals)) {
+        setSavingsGoals(parsed.savingsGoals);
+      }
+      if (parsed.subscriptions && Array.isArray(parsed.subscriptions)) {
+        setSubscriptions(parsed.subscriptions);
+      }
+      if (parsed.settings?.theme) setTheme(parsed.settings.theme);
+      if (parsed.settings?.currency) setCurrency(parsed.settings.currency);
+
+      const now = new Date().toISOString();
+      setLastSaved(now);
+      localStorage.setItem('sf_last_saved', now);
+
+      return { success: true, count: restoredItemsCount };
+    } catch (err) {
+      console.error('Erreur import:', err);
+      return { success: false, error: err.message };
+    }
+  };
+
   const resetData = () => {
-    if (window.confirm('Réinitialiser toutes les données ?')) {
+    if (window.confirm('Êtes-vous sûr de vouloir réinitialiser toutes les données aux valeurs par défaut ?Cette action écrasera vos transactions actuelles.')) {
       setTransactions(INITIAL_TRANSACTIONS);
+      setCategories(INITIAL_CATEGORIES);
       setBudgets(INITIAL_BUDGETS);
       setSavingsGoals(INITIAL_SAVINGS_GOALS);
       setSubscriptions(INITIAL_SUBSCRIPTIONS);
+      localStorage.removeItem('sf_transactions');
+      localStorage.removeItem('sf_categories');
+      localStorage.removeItem('sf_budgets');
+      localStorage.removeItem('sf_savings');
+      localStorage.removeItem('sf_subs');
+      const now = new Date().toISOString();
+      setLastSaved(now);
     }
   };
 
@@ -196,17 +321,20 @@ export const FinanceProvider = ({ children }) => {
       theme, setTheme, currency, setCurrency,
       activeTab, setActiveTab, searchQuery, setSearchQuery,
       isModalOpen, setIsModalOpen, modalType, setModalType,
-      editingItem, setEditingItem,
+      editingItem, setEditingItem, lastSaved,
       transactions, addTransaction, updateTransaction, deleteTransaction, restoreTransaction, permanentDeleteTransaction,
-      categories, budgets, updateBudget,
+      categories, setCategories, budgets, updateBudget,
       savingsGoals, addSavingsGoal, updateSavingsGoal, deleteSavingsGoal, depositToGoal,
-      subscriptions, addSubscription, deleteSubscription,
+      subscriptions, addSubscription, updateSubscription, deleteSubscription,
+      exportDataJSON, exportDataCSV, importDataJSON,
       metrics, formatCurrency, resetData,
     }}>
+
       {children}
     </FinanceContext.Provider>
   );
 };
 
 export const useFinance = () => useContext(FinanceContext);
+
 

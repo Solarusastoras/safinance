@@ -61,7 +61,8 @@ export default function Transactions() {
               background: selStatus === tab.id ? 'var(--accent-primary-light)' : 'rgba(255,255,255,0.02)',
               color: selStatus === tab.id ? 'var(--accent-primary)' : 'var(--text-secondary)',
               fontWeight: selStatus === tab.id ? 700 : 500,
-              fontSize: '.85rem', cursor: 'pointer', transition: 'all .15s ease'
+              fontSize: '.85rem', cursor: 'pointer', transition: 'all .15s ease',
+              flex: '1 1 auto', justifyContent: 'center'
             }}
           >
             <Icon name={tab.icon} size={15} />
@@ -78,18 +79,18 @@ export default function Transactions() {
       </div>
 
       <div className="card">
-        <div className="card-header" style={{ flexWrap: 'wrap', gap: '1rem' }}>
-          <div style={{ display: 'flex', gap: '.75rem', flexWrap: 'wrap' }}>
-            <select className="form-select" style={{ width: 180 }} value={selCat} onChange={e => setSelCat(e.target.value)}>
+        <div className="card-header" style={{ flexWrap: 'wrap', gap: '1rem', width: '100%' }}>
+          <div style={{ display: 'flex', gap: '.75rem', flexWrap: 'wrap', flex: 1, width: '100%' }}>
+            <select className="form-select" style={{ flex: '1 1 140px', minWidth: 130 }} value={selCat} onChange={e => setSelCat(e.target.value)}>
               <option value="all">Toutes Catégories</option>
               {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
-            <select className="form-select" style={{ width: 140 }} value={selType} onChange={e => setSelType(e.target.value)}>
+            <select className="form-select" style={{ flex: '1 1 120px', minWidth: 110 }} value={selType} onChange={e => setSelType(e.target.value)}>
               <option value="all">Tous Types</option>
               <option value="expense">Dépenses</option>
               <option value="income">Revenus</option>
             </select>
-            <select className="form-select" style={{ width: 180 }} value={selStatus} onChange={e => setSelStatus(e.target.value)}>
+            <select className="form-select" style={{ flex: '1 1 140px', minWidth: 130 }} value={selStatus} onChange={e => setSelStatus(e.target.value)}>
               <option value="active">Statut: Actives</option>
               <option value="modified">Statut: Modifiées</option>
               <option value="deleted">Statut: Corbeille</option>
@@ -99,62 +100,138 @@ export default function Transactions() {
           <span style={{ fontSize: '.84rem', color: 'var(--text-muted)' }}>{filtered.length} opération(s) trouvée(s)</span>
         </div>
 
-        <div className="table-container">
-          <table className="data-table">
-            <thead>
-              <tr><th>Date</th><th>Titre & Statut</th><th>Catégorie</th><th>Type</th><th>Montant</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colSpan="6"><div className="empty-state"><Icon name="search" size={36} /><p>Aucune transaction trouvée.</p></div></td></tr>
-              ) : filtered.map(tx => {
-                const cat = categories.find(c => c.id === tx.category) || { name: 'Général', color: '#94a3b8', icon: 'wallet' };
-                return (
-                  <tr key={tx.id} style={tx.isDeleted ? { opacity: 0.6, background: 'rgba(239, 68, 68, 0.03)' } : {}}>
-                    <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{tx.date}</td>
-                    <td>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '.2rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}>
-                          <span style={{ fontWeight: 700, textDecoration: tx.isDeleted ? 'line-through' : 'none' }}>{tx.title}</span>
-                          {tx.isModified && !tx.isDeleted && (
-                            <span className="badge" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', fontSize: '.72rem', display: 'inline-flex', alignItems: 'center', gap: '.25rem' }} title={`Modifié le ${tx.updatedAt || ''}`}>
-                              <Icon name="edit" size={11} /> Modifiée
-                            </span>
-                          )}
-                          {tx.isDeleted && (
-                            <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', fontSize: '.72rem', display: 'inline-flex', alignItems: 'center', gap: '.25rem' }} title={`Supprimé le ${tx.deletedAt || ''}`}>
-                              <Icon name="trash" size={11} /> Supprimée
-                            </span>
+        {/* Desktop & Tablet Table View */}
+        <div className="tx-desktop-table">
+          <div className="table-container">
+            <table className="data-table">
+              <thead>
+                <tr><th>Date</th><th>Titre & Statut</th><th>Catégorie</th><th>Type</th><th>Montant</th><th style={{ textAlign: 'right' }}>Actions</th></tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr><td colSpan="6"><div className="empty-state"><Icon name="search" size={36} /><p>Aucune transaction trouvée.</p></div></td></tr>
+                ) : filtered.map(tx => {
+                  const cat = categories.find(c => c.id === tx.category) || { name: 'Général', color: '#94a3b8', icon: 'wallet' };
+                  return (
+                    <tr key={tx.id} style={tx.isDeleted ? { opacity: 0.6, background: 'rgba(239, 68, 68, 0.03)' } : {}}>
+                      <td style={{ color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>{tx.date}</td>
+                      <td>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '.2rem' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+                            <span style={{ fontWeight: 700, textDecoration: tx.isDeleted ? 'line-through' : 'none' }}>{tx.title}</span>
+                            {tx.isModified && !tx.isDeleted && (
+                              <span className="badge" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', fontSize: '.72rem', display: 'inline-flex', alignItems: 'center', gap: '.25rem' }} title={`Modifié le ${tx.updatedAt || ''}`}>
+                                <Icon name="edit" size={11} /> Modifiée
+                              </span>
+                            )}
+                            {tx.isDeleted && (
+                              <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', fontSize: '.72rem', display: 'inline-flex', alignItems: 'center', gap: '.25rem' }} title={`Supprimé le ${tx.deletedAt || ''}`}>
+                                <Icon name="trash" size={11} /> Supprimée
+                              </span>
+                            )}
+                          </div>
+                          {tx.note && <span style={{ fontSize: '.76rem', color: 'var(--text-muted)' }}>{tx.note}</span>}
+                        </div>
+                      </td>
+                      <td><span className="category-pill" style={{ color: cat.color }}><Icon name={cat.icon} size={13} />{cat.name}</span></td>
+                      <td><span className={`badge ${tx.type === 'income' ? 'trend-up' : 'trend-down'}`}>{tx.type === 'income' ? 'Revenu' : 'Dépense'}</span></td>
+                      <td className={tx.type === 'income' ? 'amount-income' : 'amount-expense'}>{tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</td>
+                      <td style={{ textAlign: 'right' }}>
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '.4rem' }}>
+                          {!tx.isDeleted ? (
+                            <>
+                              <button className="icon-button" onClick={() => edit(tx)} title="Modifier"><Icon name="edit" size={15} /></button>
+                              <button className="icon-button" onClick={() => showHistory(tx)} title="Historique d'activité"><Icon name="history" size={15} color="var(--accent-info)" /></button>
+                              <button className="icon-button" onClick={() => deleteTransaction(tx.id)} title="Mettre à la corbeille"><Icon name="trash" size={15} color="var(--accent-danger)" /></button>
+                            </>
+                          ) : (
+                            <>
+                              <button className="icon-button" onClick={() => restoreTransaction(tx.id)} title="Restaurer"><Icon name="rotate-ccw" size={15} color="var(--accent-success)" /></button>
+                              <button className="icon-button" onClick={() => showHistory(tx)} title="Historique d'activité"><Icon name="history" size={15} color="var(--accent-info)" /></button>
+                              <button className="icon-button" onClick={() => permanentDeleteTransaction(tx.id)} title="Supprimer définitivement"><Icon name="x" size={15} color="var(--accent-danger)" /></button>
+                            </>
                           )}
                         </div>
-                        {tx.note && <span style={{ fontSize: '.76rem', color: 'var(--text-muted)' }}>{tx.note}</span>}
-                      </div>
-                    </td>
-                    <td><span className="category-pill" style={{ color: cat.color }}><Icon name={cat.icon} size={13} />{cat.name}</span></td>
-                    <td><span className={`badge ${tx.type === 'income' ? 'trend-up' : 'trend-down'}`}>{tx.type === 'income' ? 'Revenu' : 'Dépense'}</span></td>
-                    <td className={tx.type === 'income' ? 'amount-income' : 'amount-expense'}>{tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}</td>
-                    <td style={{ textAlign: 'right' }}>
-                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '.4rem' }}>
-                        {!tx.isDeleted ? (
-                          <>
-                            <button className="icon-button" onClick={() => edit(tx)} title="Modifier"><Icon name="edit" size={15} /></button>
-                            <button className="icon-button" onClick={() => showHistory(tx)} title="Historique d'activité"><Icon name="history" size={15} color="var(--accent-info)" /></button>
-                            <button className="icon-button" onClick={() => deleteTransaction(tx.id)} title="Mettre à la corbeille"><Icon name="trash" size={15} color="var(--accent-danger)" /></button>
-                          </>
-                        ) : (
-                          <>
-                            <button className="icon-button" onClick={() => restoreTransaction(tx.id)} title="Restaurer"><Icon name="rotate-ccw" size={15} color="var(--accent-success)" /></button>
-                            <button className="icon-button" onClick={() => showHistory(tx)} title="Historique d'activité"><Icon name="history" size={15} color="var(--accent-info)" /></button>
-                            <button className="icon-button" onClick={() => permanentDeleteTransaction(tx.id)} title="Supprimer définitivement"><Icon name="x" size={15} color="var(--accent-danger)" /></button>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Mobile Cards View */}
+        <div className="tx-mobile-cards">
+          {filtered.length === 0 ? (
+            <div className="empty-state">
+              <Icon name="search" size={36} />
+              <p>Aucune transaction trouvée.</p>
+            </div>
+          ) : filtered.map(tx => {
+            const cat = categories.find(c => c.id === tx.category) || { name: 'Général', color: '#94a3b8', icon: 'wallet' };
+            return (
+              <div key={tx.id} className="tx-mobile-card" style={tx.isDeleted ? { opacity: 0.65, background: 'rgba(239, 68, 68, 0.04)' } : {}}>
+                {/* Header: Category & Date */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span className="category-pill" style={{ color: cat.color }}>
+                    <Icon name={cat.icon} size={13} />{cat.name}
+                  </span>
+                  <span style={{ fontSize: '.78rem', color: 'var(--text-muted)' }}>{tx.date}</span>
+                </div>
+
+                {/* Main: Title & Badges */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '.5rem' }}>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '.95rem', textDecoration: tx.isDeleted ? 'line-through' : 'none' }}>
+                      {tx.title}
+                    </div>
+                    {tx.note && <div style={{ fontSize: '.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>{tx.note}</div>}
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <div className={tx.type === 'income' ? 'amount-income' : 'amount-expense'} style={{ fontSize: '1.05rem', fontWeight: 800 }}>
+                      {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer: Status Badges & Actions */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '.5rem', borderTop: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', gap: '.3rem', alignItems: 'center' }}>
+                    <span className={`badge ${tx.type === 'income' ? 'trend-up' : 'trend-down'}`}>
+                      {tx.type === 'income' ? 'Revenu' : 'Dépense'}
+                    </span>
+                    {tx.isModified && !tx.isDeleted && (
+                      <span className="badge" style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', fontSize: '.72rem' }}>
+                        Modifiée
+                      </span>
+                    )}
+                    {tx.isDeleted && (
+                      <span className="badge" style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#f87171', fontSize: '.72rem' }}>
+                        Corbeille
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '.4rem' }}>
+                    {!tx.isDeleted ? (
+                      <>
+                        <button className="icon-button" onClick={() => edit(tx)} title="Modifier"><Icon name="edit" size={15} /></button>
+                        <button className="icon-button" onClick={() => showHistory(tx)} title="Historique"><Icon name="history" size={15} color="var(--accent-info)" /></button>
+                        <button className="icon-button" onClick={() => deleteTransaction(tx.id)} title="Mettre à la corbeille"><Icon name="trash" size={15} color="var(--accent-danger)" /></button>
+                      </>
+                    ) : (
+                      <>
+                        <button className="icon-button" onClick={() => restoreTransaction(tx.id)} title="Restaurer"><Icon name="rotate-ccw" size={15} color="var(--accent-success)" /></button>
+                        <button className="icon-button" onClick={() => showHistory(tx)} title="Historique"><Icon name="history" size={15} color="var(--accent-info)" /></button>
+                        <button className="icon-button" onClick={() => permanentDeleteTransaction(tx.id)} title="Supprimer définitivement"><Icon name="x" size={15} color="var(--accent-danger)" /></button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

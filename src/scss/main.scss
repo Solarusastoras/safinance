@@ -181,12 +181,18 @@ body {
   @media (max-width: 900px) { grid-template-columns: 1fr; }
 }
 
-.table-container { overflow-x: hidden; border-radius: var(--radius-md); width: 100%; }
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border-radius: var(--radius-md);
+  width: 100%;
+}
 
 .data-table {
   width: 100%;
   border-collapse: collapse;
   text-align: left;
+  min-width: 600px;
 
   th {
     background: rgba(0,0,0,.18);
@@ -213,6 +219,36 @@ body {
   tbody tr { transition: var(--transition); }
   tbody tr:hover td { background: rgba(255,255,255,.025); }
 }
+
+// ── Mobile Transaction Cards ────────────────────────────────
+.tx-desktop-table {
+  display: block;
+  @media (max-width: 768px) { display: none; }
+}
+
+.tx-mobile-cards {
+  display: none;
+  flex-direction: column;
+  gap: .85rem;
+
+  @media (max-width: 768px) { display: flex; }
+}
+
+.tx-mobile-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: .75rem;
+  transition: var(--transition);
+
+  &:hover {
+    border-color: var(--border-hover);
+  }
+}
+
 
 // ── Badges ─────────────────────────────────────────────────
 .badge {

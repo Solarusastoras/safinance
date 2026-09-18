@@ -5,13 +5,13 @@ import Icon from '../Icon/Icon';
 import styles from './Sidebar.module.scss';
 
 const NAV_ITEMS = [
-  { id: 'dashboard',     label: 'Tableau de bord',      icon: 'home'       },
-  { id: 'transactions',  label: 'Transactions',          icon: 'wallet'     },
-  { id: 'budgets',       label: 'Budgets Mensuels',      icon: 'pie-chart'  },
-  { id: 'savings',       label: "Objectifs d'Épargne",   icon: 'piggy-bank' },
-  { id: 'subscriptions', label: 'Abonnements',           icon: 'tv'         },
-  { id: 'analytics',     label: 'Analyses Détaillées',   icon: 'activity'   },
-  { id: 'settings',      label: 'Paramètres',            icon: 'settings'   },
+  { id: 'dashboard', label: 'Tableau de bord', icon: 'home' },
+  { id: 'transactions', label: 'Transactions', icon: 'wallet' },
+  { id: 'budgets', label: 'Budgets Mensuels', icon: 'pie-chart' },
+  { id: 'savings', label: "Objectifs d'Épargne", icon: 'piggy-bank' },
+  { id: 'subscriptions', label: 'Abonnements', icon: 'tv' },
+  { id: 'analytics', label: 'Analyses Détaillées', icon: 'activity' },
+  { id: 'settings', label: 'Paramètres', icon: 'settings' },
 ];
 
 export default function Sidebar() {
@@ -24,7 +24,7 @@ export default function Sidebar() {
           <Icon name="wallet" size={22} />
         </div>
         <div className={styles.brandText}>
-          <span className={styles.brandTitle}>SaFinance</span>
+          <span className={styles.brandTitle}>Ma Finance</span>
           <span className={styles.brandBadge}>PRO</span>
         </div>
       </div>

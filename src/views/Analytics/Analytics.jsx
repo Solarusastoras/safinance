@@ -36,8 +36,50 @@ export default function Analytics() {
     return net > 0 ? net : 0;
   }, [metrics.totalIncome, metrics.totalExpense]);
 
+  const monthlyTrendData = useMemo(() => {
+    const monthsMap = {};
+
+    activeTransactions.forEach(t => {
+      if (!t.date) return;
+      const monthKey = t.date.slice(0, 7); // 'YYYY-MM'
+      if (!monthsMap[monthKey]) {
+        monthsMap[monthKey] = { income: 0, expense: 0 };
+      }
+      if (t.type === 'income') {
+        monthsMap[monthKey].income += Number(t.amount || 0);
+      } else if (t.type === 'expense') {
+        monthsMap[monthKey].expense += Number(t.amount || 0);
+      }
+    });
+
+    const sortedMonthKeys = Object.keys(monthsMap).sort();
+
+    if (sortedMonthKeys.length === 0) {
+      const nowMonth = new Date().toISOString().slice(0, 7);
+      sortedMonthKeys.push(nowMonth);
+      monthsMap[nowMonth] = { income: metrics.totalIncome, expense: metrics.totalExpense };
+    }
+
+    const monthNames = {
+      '01': 'Jan', '02': 'Fév', '03': 'Mar', '04': 'Avr',
+      '05': 'Mai', '06': 'Juin', '07': 'Juil', '08': 'Août',
+      '09': 'Sept', '10': 'Oct', '11': 'Nov', '12': 'Déc'
+    };
+
+    const labels = sortedMonthKeys.map(key => {
+      const parts = key.split('-');
+      const m = parts[1];
+      return monthNames[m] ? `${monthNames[m]} ${parts[0]}` : key;
+    });
+
+    const savingsData = sortedMonthKeys.map(k => Math.max(0, monthsMap[k].income - monthsMap[k].expense));
+    const expenseData = sortedMonthKeys.map(k => monthsMap[k].expense);
+
+    return { labels, savingsData, expenseData };
+  }, [activeTransactions, metrics]);
+
   useEffect(() => {
-    // Trend Bar Chart
+    // Trend Line Chart
     if (trendChartRef.current) {
       if (chartInstances.current.trend) {
         chartInstances.current.trend.destroy();
@@ -45,11 +87,11 @@ export default function Analytics() {
       chartInstances.current.trend = new Chart(trendChartRef.current, {
         type: 'line',
         data: {
-          labels: ['Mai', 'Juin', 'Juil', 'Août', 'Sept', 'Ce Mois'],
+          labels: monthlyTrendData.labels,
           datasets: [
             {
               label: 'Épargne Réalisée (€)',
-              data: [900, 1000, 1050, 1100, 1250, metrics.balance > 0 ? metrics.balance : 0],
+              data: monthlyTrendData.savingsData,
               borderColor: '#10b981',
               backgroundColor: 'rgba(16, 185, 129, 0.12)',
               fill: true,
@@ -60,7 +102,7 @@ export default function Analytics() {
             },
             {
               label: 'Charges & Dépenses (€)',
-              data: [1950, 2200, 2050, 2300, 2100, metrics.totalExpense],
+              data: monthlyTrendData.expenseData,
               borderColor: '#f43f5e',
               backgroundColor: 'rgba(244, 63, 94, 0.08)',
               fill: true,
@@ -127,7 +169,7 @@ export default function Analytics() {
       currentCharts.trend?.destroy();
       currentCharts.breakdown?.destroy();
     };
-  }, [metrics, categoryBreakdown]);
+  }, [monthlyTrendData, categoryBreakdown]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>

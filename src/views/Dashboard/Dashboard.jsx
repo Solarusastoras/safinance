@@ -25,6 +25,48 @@ export default function Dashboard() {
     }).sort((a, b) => b.amount - a.amount);
   }, [activeTransactions, categories]);
 
+  const monthlyFlowData = useMemo(() => {
+    const monthsMap = {};
+
+    activeTransactions.forEach(t => {
+      if (!t.date) return;
+      const monthKey = t.date.slice(0, 7); // 'YYYY-MM'
+      if (!monthsMap[monthKey]) {
+        monthsMap[monthKey] = { income: 0, expense: 0 };
+      }
+      if (t.type === 'income') {
+        monthsMap[monthKey].income += Number(t.amount || 0);
+      } else if (t.type === 'expense') {
+        monthsMap[monthKey].expense += Number(t.amount || 0);
+      }
+    });
+
+    const sortedMonthKeys = Object.keys(monthsMap).sort();
+
+    if (sortedMonthKeys.length === 0) {
+      const nowMonth = new Date().toISOString().slice(0, 7);
+      sortedMonthKeys.push(nowMonth);
+      monthsMap[nowMonth] = { income: metrics.totalIncome, expense: metrics.totalExpense };
+    }
+
+    const monthNames = {
+      '01': 'Jan', '02': 'Fév', '03': 'Mar', '04': 'Avr',
+      '05': 'Mai', '06': 'Juin', '07': 'Juil', '08': 'Août',
+      '09': 'Sept', '10': 'Oct', '11': 'Nov', '12': 'Déc'
+    };
+
+    const labels = sortedMonthKeys.map(key => {
+      const parts = key.split('-');
+      const m = parts[1];
+      return monthNames[m] ? `${monthNames[m]} ${parts[0]}` : key;
+    });
+
+    const incomeData = sortedMonthKeys.map(k => monthsMap[k].income);
+    const expenseData = sortedMonthKeys.map(k => monthsMap[k].expense);
+
+    return { labels, incomeData, expenseData };
+  }, [activeTransactions, metrics]);
+
   useEffect(() => {
     if (cashFlowCanvasRef.current) {
       if (chartInstances.current.cashFlow) {
@@ -33,10 +75,10 @@ export default function Dashboard() {
       chartInstances.current.cashFlow = new Chart(cashFlowCanvasRef.current, {
         type: 'bar',
         data: {
-          labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août'],
+          labels: monthlyFlowData.labels,
           datasets: [
-            { label: 'Revenus (€)', data: [2800, 3100, 2900, 3400, 3200, 3350, 3100, metrics.totalIncome], backgroundColor: '#10b981', borderRadius: 6 },
-            { label: 'Dépenses (€)', data: [1900, 2100, 1850, 2300, 1950, 2200, 2050, metrics.totalExpense], backgroundColor: '#f43f5e', borderRadius: 6 },
+            { label: 'Revenus (€)', data: monthlyFlowData.incomeData, backgroundColor: '#10b981', borderRadius: 6 },
+            { label: 'Dépenses (€)', data: monthlyFlowData.expenseData, backgroundColor: '#f43f5e', borderRadius: 6 },
           ],
         },
         options: {
@@ -78,7 +120,7 @@ export default function Dashboard() {
       currentCharts.cashFlow?.destroy();
       currentCharts.donut?.destroy();
     };
-  }, [metrics, categoryExpenses]);
+  }, [monthlyFlowData, categoryExpenses]);
 
   return (
     <div>

@@ -163,10 +163,9 @@ function CategoryForm({ item, onClose }) {
                 borderRadius: '50%',
                 backgroundColor: c,
                 border: color === c ? '2.5px solid #fff' : '2px solid transparent',
-                boxShadow: color === c ? '0 0 10px ' + c : 'none',
+                boxShadow: color === c ? '0 0 8px ' + c : 'none',
                 cursor: 'pointer',
-                transform: color === c ? 'scale(1.15)' : 'scale(1)',
-                transition: 'all .15s ease'
+                transition: 'border-color .15s ease, box-shadow .15s ease'
               }}
             />
           ))}

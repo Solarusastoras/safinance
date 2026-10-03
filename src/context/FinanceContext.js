@@ -28,15 +28,7 @@ export const FinanceProvider = ({ children }) => {
     const s = localStorage.getItem('sf_categories');
     if (s) {
       try {
-        const parsed = JSON.parse(s);
-        const existingIds = new Set(parsed.map(c => c.id));
-        const missing = INITIAL_CATEGORIES.filter(c => !existingIds.has(c.id));
-        if (missing.length > 0) {
-          const merged = [...parsed, ...missing];
-          localStorage.setItem('sf_categories', JSON.stringify(merged));
-          return merged;
-        }
-        return parsed;
+        return JSON.parse(s);
       } catch (e) {
         return INITIAL_CATEGORIES;
       }
@@ -213,6 +205,7 @@ export const FinanceProvider = ({ children }) => {
 
   const deleteCategory = useCallback((id) => {
     setCategories(p => p.filter(c => c.id !== id));
+    setBudgets(p => p.filter(b => b.categoryId !== id));
   }, []);
 
   const updateBudget = useCallback((categoryId, target) => {

@@ -71,7 +71,7 @@ function TransactionForm({ item, onClose }) {
 
 // ── Category Form ─────────────────────────────────────────
 function CategoryForm({ item, onClose }) {
-  const { addCategory, updateCategory } = useFinance();
+  const { addCategory, updateCategory, deleteCategory } = useFinance();
   const [name, setName]   = useState(item?.name || '');
   const [type, setType]   = useState(item?.type || 'expense');
   const [color, setColor] = useState(item?.color || '#ff6e00');
@@ -227,9 +227,35 @@ function CategoryForm({ item, onClose }) {
         </span>
       </div>
 
-      <button className="btn-primary" type="submit" style={{ justifyContent: 'center' }}>
-        {item?.id ? 'Enregistrer les modifications' : 'Créer la catégorie'}
-      </button>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '.65rem' }}>
+        <button className="btn-primary" type="submit" style={{ justifyContent: 'center' }}>
+          {item?.id ? 'Enregistrer les modifications' : 'Créer la catégorie'}
+        </button>
+
+        {item?.id && (
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{
+              borderColor: 'var(--accent-danger)',
+              color: 'var(--accent-danger)',
+              justifyContent: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '.4rem'
+            }}
+            onClick={() => {
+              if (window.confirm(`Êtes-vous sûr de vouloir supprimer définitivement la catégorie "${item.name}" ?`)) {
+                deleteCategory(item.id);
+                onClose();
+              }
+            }}
+          >
+            <Icon name="trash" size={15} color="var(--accent-danger)" />
+            <span>Supprimer cette catégorie</span>
+          </button>
+        )}
+      </div>
     </form>
   );
 }

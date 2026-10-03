@@ -4,7 +4,7 @@ import { useFinance } from '../../context/FinanceContext';
 import Icon from '../../components/Icon/Icon';
 
 export default function Budgets() {
-  const { budgets, categories, transactions, formatCurrency, setEditingItem, setModalType, setIsModalOpen } = useFinance();
+  const { budgets, categories, transactions, formatCurrency, deleteCategory, setEditingItem, setModalType, setIsModalOpen } = useFinance();
 
   const edit = (cat, bgt) => { setEditingItem({ categoryId: cat.id, target: bgt.target }); setModalType('budget'); setIsModalOpen(true); };
   const addCat = () => { setEditingItem(null); setModalType('category'); setIsModalOpen(true); };
@@ -49,6 +49,17 @@ export default function Budgets() {
                   title="Définir / modifier le plafond budgétaire"
                 >
                   <Icon name="edit" size={14} />
+                </button>
+                <button
+                  className="icon-button"
+                  onClick={() => {
+                    if (window.confirm(`Supprimer définitivement la catégorie "${cat.name}" et son budget ?`)) {
+                      deleteCategory(cat.id);
+                    }
+                  }}
+                  title="Supprimer cette catégorie"
+                >
+                  <Icon name="trash" size={14} color="var(--accent-danger)" />
                 </button>
               </div>
             </div>

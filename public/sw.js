@@ -1,19 +1,21 @@
 // public/sw.js
-const CACHE_NAME = 'safinance-pwa-v1';
+const CACHE_NAME = 'safinance-pwa-v2';
+const BASE_PATH = self.registration.scope;
+
 const STATIC_ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/favicon.ico',
-  '/logo192.png',
-  '/logo512.png',
+  './',
+  './index.html',
+  './manifest.json',
+  './favicon.ico',
+  './logo192.png',
+  './logo512.png',
 ];
 
 // Install: Cache App Shell & core assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(STATIC_ASSETS.map(asset => new URL(asset, BASE_PATH).toString()));
     }).then(() => self.skipWaiting())
   );
 });
@@ -34,7 +36,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // Ignore non-http requests (e.g. chrome-extension://)
+  // Ignore non-http requests
   if (!url.protocol.startsWith('http')) return;
 
   // Handle Google Fonts (Cache First)
@@ -69,7 +71,7 @@ self.addEventListener('fetch', (event) => {
       }).catch(() => {
         // Offline fallback for navigation requests
         if (event.request.mode === 'navigate') {
-          return caches.match('/index.html') || caches.match('/');
+          return caches.match(new URL('./index.html', BASE_PATH).toString()) || caches.match(BASE_PATH);
         }
         return null;
       });

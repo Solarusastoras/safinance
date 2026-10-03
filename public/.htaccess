@@ -1,4 +1,4 @@
-# .htaccess pour hébergement OVH (Apache)
+# .htaccess pour hébergement OVH sous le répertoire /finance
 
 # 1. Forcer le HTTPS
 <IfModule mod_rewrite.c>
@@ -7,15 +7,15 @@
   RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 </IfModule>
 
-# 2. Routage React SPA (Redirection vers index.html)
+# 2. Routage React SPA pour /finance/
 <IfModule mod_rewrite.c>
   RewriteEngine On
-  RewriteBase /
+  RewriteBase /finance/
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteCond %{REQUEST_FILENAME} !-l
-  RewriteRule . /index.html [L]
+  RewriteRule . /finance/index.html [L]
 </IfModule>
 
 # 3. Compression GZIP / Deflate

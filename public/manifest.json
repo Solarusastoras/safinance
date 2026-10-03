@@ -21,7 +21,8 @@
       "purpose": "any maskable"
     }
   ],
-  "start_url": ".",
+  "start_url": "/finance/",
+  "scope": "/finance/",
   "display": "standalone",
   "orientation": "portrait-primary",
   "theme_color": "#050d1f",

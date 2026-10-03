@@ -1,7 +1,7 @@
 {
   "name": "ma_finance-cra",
   "version": "0.1.0",
-  "homepage": "https://solarusweb.ovh",
+  "homepage": "https://solarusweb.ovh/finance",
   "private": true,
   "dependencies": {
     "@testing-library/dom": "^10.4.1",

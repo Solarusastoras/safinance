@@ -7,9 +7,18 @@ export default function Budgets() {
   const { budgets, categories, transactions, formatCurrency, setEditingItem, setModalType, setIsModalOpen } = useFinance();
 
   const edit = (cat, bgt) => { setEditingItem({ categoryId: cat.id, target: bgt.target }); setModalType('budget'); setIsModalOpen(true); };
+  const addCat = () => { setEditingItem(null); setModalType('category'); setIsModalOpen(true); };
 
   return (
-    <div className="budgets-grid">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <button className="btn-secondary" onClick={addCat} style={{ display: 'flex', alignItems: 'center', gap: '.4rem' }}>
+          <Icon name="plus" size={16} />
+          <span>Créer une Catégorie</span>
+        </button>
+      </div>
+
+      <div className="budgets-grid">
       {categories.filter(c => c.type === 'expense').map(cat => {
         const bgt = budgets.find(b => b.categoryId === cat.id) || { target: 0 };
         const spent = transactions.filter(t => !t.isDeleted && t.type === 'expense' && t.category === cat.id).reduce((s, t) => s + Number(t.amount), 0);
@@ -26,7 +35,22 @@ export default function Budgets() {
                 <div className="metric-icon" style={{ background: `${cat.color}22`, color: cat.color }}><Icon name={cat.icon} size={20} /></div>
                 <div><h3 className="card-title">{cat.name}</h3><span className="card-subtitle">{status}</span></div>
               </div>
-              <button className="icon-button" onClick={() => edit(cat, bgt)}><Icon name="edit" size={15} /></button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '.35rem' }}>
+                <button
+                  className="icon-button"
+                  onClick={() => { setEditingItem(cat); setModalType('category'); setIsModalOpen(true); }}
+                  title="Modifier le nom, couleur et icône de la catégorie"
+                >
+                  <Icon name="tag" size={14} color="var(--accent-primary)" />
+                </button>
+                <button
+                  className="icon-button"
+                  onClick={() => edit(cat, bgt)}
+                  title="Définir / modifier le plafond budgétaire"
+                >
+                  <Icon name="edit" size={14} />
+                </button>
+              </div>
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
               <div>
@@ -54,6 +78,7 @@ export default function Budgets() {
           </div>
         );
       })}
+      </div>
     </div>
   );
 }

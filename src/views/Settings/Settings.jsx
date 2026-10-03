@@ -13,9 +13,14 @@ export default function Settings() {
     exportDataCSV,
     importDataJSON,
     transactions,
+    categories,
+    deleteCategory,
     budgets,
     savingsGoals,
     subscriptions,
+    setEditingItem,
+    setModalType,
+    setIsModalOpen,
   } = useFinance();
 
   const [notification, setNotification] = useState(null);
@@ -97,6 +102,89 @@ export default function Settings() {
             <option value="GBP">Livre Sterling (£)</option>
             <option value="CHF">Franc Suisse (CHF)</option>
           </select>
+        </div>
+      </div>
+
+      {/* ── Category Management ── */}
+      <div className="card" style={{ gap: '1.25rem' }}>
+        <div className="card-header" style={{ margin: 0 }}>
+          <div>
+            <h3 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '.5rem' }}>
+              <Icon name="tag" size={20} color="var(--accent-primary)" />
+              <span>Gestion des Catégories</span>
+            </h3>
+            <span className="card-subtitle">{categories.length} catégories enregistrées</span>
+          </div>
+          <button
+            className="btn-primary"
+            onClick={() => { setEditingItem(null); setModalType('category'); setIsModalOpen(true); }}
+            style={{ fontSize: '.8rem', padding: '.45rem .85rem' }}
+          >
+            <Icon name="plus" size={15} />
+            <span>Ajouter une catégorie</span>
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '.65rem', maxHeight: 320, overflowY: 'auto', paddingRight: '.25rem' }}>
+          {categories.map(c => (
+            <div
+              key={c.id}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '.6rem .8rem',
+                background: 'var(--bg-input)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-color)',
+                gap: '.75rem'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '.65rem', minWidth: 0 }}>
+                <div style={{
+                  width: 32, height: 32,
+                  borderRadius: 8,
+                  backgroundColor: `${c.color}22`,
+                  color: c.color,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <Icon name={c.icon || 'tag'} size={17} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                  <span style={{ fontWeight: 700, fontSize: '.88rem', color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {c.name}
+                  </span>
+                  <span style={{ fontSize: '.72rem', color: c.type === 'income' ? 'var(--accent-success)' : 'var(--text-muted)' }}>
+                    {c.type === 'income' ? 'Revenu' : 'Dépense'}
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '.35rem', flexShrink: 0 }}>
+                <button
+                  className="icon-button"
+                  onClick={() => { setEditingItem(c); setModalType('category'); setIsModalOpen(true); }}
+                  title="Modifier la catégorie"
+                  style={{ width: 32, height: 32 }}
+                >
+                  <Icon name="edit" size={14} />
+                </button>
+                <button
+                  className="icon-button"
+                  onClick={() => {
+                    if (window.confirm(`Supprimer la catégorie "${c.name}" ?`)) {
+                      deleteCategory(c.id);
+                    }
+                  }}
+                  title="Supprimer la catégorie"
+                  style={{ width: 32, height: 32 }}
+                >
+                  <Icon name="trash" size={14} color="var(--accent-danger)" />
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
 

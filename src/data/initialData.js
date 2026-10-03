@@ -7,6 +7,8 @@ export const INITIAL_CATEGORIES = [
   { id: 'cat-subs',        name: 'Abonnements & Médias',   icon: 'tv',           color: '#8b5cf6', type: 'expense' },
   { id: 'cat-health',      name: 'Santé & Bien-être',      icon: 'heart-pulse',  color: '#06b6d4', type: 'expense' },
   { id: 'cat-tech',        name: 'Shopping & High-Tech',   icon: 'laptop',       color: '#f97316', type: 'expense' },
+  { id: 'cat-gaming',      name: 'Jeux PC',                icon: 'gamepad',      color: '#8b5cf6', type: 'expense' },
+  { id: 'cat-aliexpress',  name: 'AliExpress',             icon: 'package',      color: '#ff6e00', type: 'expense' },
   { id: 'cat-salary',      name: 'Salaire & Revenus',      icon: 'wallet',       color: '#10b981', type: 'income'  },
   { id: 'cat-freelance',   name: 'Freelance & Bonus',      icon: 'briefcase',    color: '#6366f1', type: 'income'  },
   { id: 'cat-investments', name: 'Investissements',        icon: 'trending-up',  color: '#14b8a6', type: 'income'  },

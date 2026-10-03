@@ -1,5 +1,5 @@
 // src/context/FinanceContext.js
-import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import {
   INITIAL_CATEGORIES,
   INITIAL_TRANSACTIONS,
@@ -8,11 +8,11 @@ import {
   INITIAL_SUBSCRIPTIONS,
 } from '../data/initialData';
 
-const FinanceContext = createContext();
+const FinanceContext = createContext(null);
 
 export const FinanceProvider = ({ children }) => {
-  const [theme, setTheme]       = useState(() => localStorage.getItem('sf_theme')    || 'metallic');
-  const [currency, setCurrency] = useState(() => localStorage.getItem('sf_currency') || 'EUR');
+  const [theme, setTheme]           = useState(() => localStorage.getItem('sf_theme')    || 'metallic');
+  const [currency, setCurrency]     = useState(() => localStorage.getItem('sf_currency') || 'EUR');
   const [activeTab, setActiveTab]   = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -26,7 +26,22 @@ export const FinanceProvider = ({ children }) => {
   });
   const [categories, setCategories] = useState(() => {
     const s = localStorage.getItem('sf_categories');
-    return s ? JSON.parse(s) : INITIAL_CATEGORIES;
+    if (s) {
+      try {
+        const parsed = JSON.parse(s);
+        const existingIds = new Set(parsed.map(c => c.id));
+        const missing = INITIAL_CATEGORIES.filter(c => !existingIds.has(c.id));
+        if (missing.length > 0) {
+          const merged = [...parsed, ...missing];
+          localStorage.setItem('sf_categories', JSON.stringify(merged));
+          return merged;
+        }
+        return parsed;
+      } catch (e) {
+        return INITIAL_CATEGORIES;
+      }
+    }
+    return INITIAL_CATEGORIES;
   });
   const [budgets, setBudgets] = useState(() => {
     const s = localStorage.getItem('sf_budgets');
@@ -41,7 +56,7 @@ export const FinanceProvider = ({ children }) => {
     return s ? JSON.parse(s) : INITIAL_SUBSCRIPTIONS;
   });
 
-  // Auto-sync localStorage & update lastSaved timestamp
+  // Auto-sync theme & currency
   useEffect(() => {
     localStorage.setItem('sf_theme', theme);
     document.documentElement.setAttribute('data-theme', theme);
@@ -51,6 +66,7 @@ export const FinanceProvider = ({ children }) => {
     localStorage.setItem('sf_currency', currency);
   }, [currency]);
 
+  // Auto-sync localStorage & update lastSaved timestamp
   useEffect(() => {
     const now = new Date().toISOString();
     localStorage.setItem('sf_transactions', JSON.stringify(transactions));
@@ -62,23 +78,24 @@ export const FinanceProvider = ({ children }) => {
     setLastSaved(now);
   }, [transactions, categories, budgets, savingsGoals, subscriptions]);
 
-  const formatCurrency = (amount) => {
+  const formatCurrency = useCallback((amount) => {
     const symbols = { EUR: '€', USD: '$', GBP: '£', CHF: 'CHF ' };
-    return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(amount) + ' ' + (symbols[currency] || '€');
-  };
+    const num = Number(amount) || 0;
+    return new Intl.NumberFormat('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(num) + ' ' + (symbols[currency] || '€');
+  }, [currency]);
 
   const metrics = useMemo(() => {
     const active = transactions.filter(t => !t.isDeleted);
-    const totalIncome  = active.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount), 0);
-    const totalExpense = active.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount), 0);
+    const totalIncome  = active.filter(t => t.type === 'income').reduce((s, t) => s + Number(t.amount || 0), 0);
+    const totalExpense = active.filter(t => t.type === 'expense').reduce((s, t) => s + Number(t.amount || 0), 0);
     const balance      = totalIncome - totalExpense;
     const savingsRate  = totalIncome > 0 ? Math.max(0, (balance / totalIncome) * 100) : 0;
-    const totalSavings = savingsGoals.reduce((s, g) => s + Number(g.currentAmount), 0);
+    const totalSavings = savingsGoals.reduce((s, g) => s + Number(g.currentAmount || 0), 0);
     return { totalIncome, totalExpense, balance, savingsRate, totalSavings };
   }, [transactions, savingsGoals]);
 
   // Actions
-  const addTransaction = (tx) => {
+  const addTransaction = useCallback((tx) => {
     const formattedDate = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     const newTx = {
       ...tx,
@@ -96,9 +113,9 @@ export const FinanceProvider = ({ children }) => {
       ]
     };
     setTransactions(p => [newTx, ...p]);
-  };
+  }, []);
 
-  const updateTransaction = (id, u) => {
+  const updateTransaction = useCallback((id, u) => {
     const formattedDate = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     setTransactions(p => p.map(t => {
       if (t.id !== id) return t;
@@ -130,9 +147,9 @@ export const FinanceProvider = ({ children }) => {
         ]
       };
     }));
-  };
+  }, []);
 
-  const deleteTransaction = (id) => {
+  const deleteTransaction = useCallback((id) => {
     const formattedDate = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     setTransactions(p => p.map(t => {
       if (t.id !== id) return t;
@@ -151,9 +168,9 @@ export const FinanceProvider = ({ children }) => {
         ]
       };
     }));
-  };
+  }, []);
 
-  const restoreTransaction = (id) => {
+  const restoreTransaction = useCallback((id) => {
     const formattedDate = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
     setTransactions(p => p.map(t => {
       if (t.id !== id) return t;
@@ -172,36 +189,90 @@ export const FinanceProvider = ({ children }) => {
         ]
       };
     }));
-  };
+  }, []);
 
-  const permanentDeleteTransaction = (id) => {
+  const permanentDeleteTransaction = useCallback((id) => {
     setTransactions(p => p.filter(t => t.id !== id));
-  };
+  }, []);
 
-  const updateBudget = (categoryId, target) => {
+  const addCategory = useCallback((cat) => {
+    const newCat = {
+      id: cat.id || 'cat-' + Date.now(),
+      name: cat.name || 'Nouvelle Catégorie',
+      icon: cat.icon || 'shopping-bag',
+      color: cat.color || '#6366f1',
+      type: cat.type || 'expense',
+    };
+    setCategories(p => [...p, newCat]);
+    return newCat;
+  }, []);
+
+  const updateCategory = useCallback((id, u) => {
+    setCategories(p => p.map(c => c.id === id ? { ...c, ...u } : c));
+  }, []);
+
+  const deleteCategory = useCallback((id) => {
+    setCategories(p => p.filter(c => c.id !== id));
+  }, []);
+
+  const updateBudget = useCallback((categoryId, target) => {
     setBudgets(p => {
       const ex = p.find(b => b.categoryId === categoryId);
       if (ex) return p.map(b => b.categoryId === categoryId ? { ...b, target: Number(target) } : b);
       return [...p, { id: 'bgt-' + Date.now(), categoryId, target: Number(target) }];
     });
-  };
+  }, []);
 
-  const addSavingsGoal    = (g)  => setSavingsGoals(p => [{ ...g, id: 'goal-' + Date.now() }, ...p]);
-  const updateSavingsGoal = (id, u) => setSavingsGoals(p => p.map(g => g.id === id ? { ...g, ...u } : g));
-  const deleteSavingsGoal = (id)  => setSavingsGoals(p => p.filter(g => g.id !== id));
+  const addSavingsGoal = useCallback((g) => {
+    setSavingsGoals(p => [{ ...g, id: 'goal-' + Date.now() }, ...p]);
+  }, []);
 
-  const depositToGoal = (id, amount) => {
+  const updateSavingsGoal = useCallback((id, u) => {
+    setSavingsGoals(p => p.map(g => g.id === id ? { ...g, ...u } : g));
+  }, []);
+
+  const deleteSavingsGoal = useCallback((id) => {
+    setSavingsGoals(p => p.filter(g => g.id !== id));
+  }, []);
+
+  const depositToGoal = useCallback((id, amount) => {
     setSavingsGoals(p => p.map(g => g.id === id ? { ...g, currentAmount: Number(g.currentAmount) + Number(amount) } : g));
-    const goal = savingsGoals.find(g => g.id === id);
-    if (goal) addTransaction({ title: `Épargne: ${goal.title}`, amount: Number(amount), type: 'expense', category: 'cat-investments', account: 'acc-main', date: new Date().toISOString().split('T')[0], note: `Virement vers ${goal.title}` });
-  };
+    setTransactions(p => {
+      const goal = savingsGoals.find(g => g.id === id);
+      const title = goal ? `Épargne: ${goal.title}` : 'Épargne';
+      const formattedDate = new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+      const newTx = {
+        id: 'tx-' + Date.now(),
+        title,
+        amount: Number(amount),
+        type: 'expense',
+        category: 'cat-investments',
+        account: 'acc-main',
+        date: new Date().toISOString().split('T')[0],
+        note: `Virement vers ${goal?.title || 'épargne'}`,
+        isModified: false,
+        isDeleted: false,
+        createdAt: formattedDate,
+        history: [{ action: 'created', date: formattedDate, note: 'Virement vers tirelire' }]
+      };
+      return [newTx, ...p];
+    });
+  }, [savingsGoals]);
 
-  const addSubscription    = (s) => setSubscriptions(p => [{ ...s, id: 'sub-' + Date.now() }, ...p]);
-  const updateSubscription = (id, u) => setSubscriptions(p => p.map(s => s.id === id ? { ...s, ...u } : s));
-  const deleteSubscription = (id) => setSubscriptions(p => p.filter(s => s.id !== id));
+  const addSubscription = useCallback((s) => {
+    setSubscriptions(p => [{ ...s, id: 'sub-' + Date.now() }, ...p]);
+  }, []);
+
+  const updateSubscription = useCallback((id, u) => {
+    setSubscriptions(p => p.map(s => s.id === id ? { ...s, ...u } : s));
+  }, []);
+
+  const deleteSubscription = useCallback((id) => {
+    setSubscriptions(p => p.filter(s => s.id !== id));
+  }, []);
 
   // Export JSON Backup
-  const exportDataJSON = () => {
+  const exportDataJSON = useCallback(() => {
     const backupData = {
       version: '1.0',
       appName: 'SAFinance',
@@ -224,10 +295,10 @@ export const FinanceProvider = ({ children }) => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  };
+  }, [theme, currency, transactions, categories, budgets, savingsGoals, subscriptions]);
 
   // Export CSV Transactions
-  const exportDataCSV = () => {
+  const exportDataCSV = useCallback(() => {
     if (!transactions || transactions.length === 0) {
       alert('Aucune transaction disponible à exporter.');
       return;
@@ -258,10 +329,10 @@ export const FinanceProvider = ({ children }) => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-  };
+  }, [transactions, categories]);
 
   // Import JSON Backup
-  const importDataJSON = (jsonString) => {
+  const importDataJSON = useCallback((jsonString) => {
     try {
       const parsed = JSON.parse(jsonString);
       if (!parsed || typeof parsed !== 'object') {
@@ -297,10 +368,10 @@ export const FinanceProvider = ({ children }) => {
       console.error('Erreur import:', err);
       return { success: false, error: err.message };
     }
-  };
+  }, []);
 
-  const resetData = () => {
-    if (window.confirm('Êtes-vous sûr de vouloir réinitialiser toutes les données aux valeurs par défaut ?Cette action écrasera vos transactions actuelles.')) {
+  const resetData = useCallback(() => {
+    if (window.confirm('Êtes-vous sûr de vouloir réinitialiser toutes les données aux valeurs par défaut ? Cette action écrasera vos transactions actuelles.')) {
       setTransactions(INITIAL_TRANSACTIONS);
       setCategories(INITIAL_CATEGORIES);
       setBudgets(INITIAL_BUDGETS);
@@ -314,27 +385,56 @@ export const FinanceProvider = ({ children }) => {
       const now = new Date().toISOString();
       setLastSaved(now);
     }
-  };
+  }, []);
+
+  const contextValue = useMemo(() => ({
+    theme, setTheme,
+    currency, setCurrency,
+    activeTab, setActiveTab,
+    searchQuery, setSearchQuery,
+    isModalOpen, setIsModalOpen,
+    modalType, setModalType,
+    editingItem, setEditingItem,
+    lastSaved,
+    transactions, addTransaction, updateTransaction, deleteTransaction, restoreTransaction, permanentDeleteTransaction,
+    categories, setCategories, addCategory, updateCategory, deleteCategory,
+    budgets, updateBudget,
+    savingsGoals, addSavingsGoal, updateSavingsGoal, deleteSavingsGoal, depositToGoal,
+    subscriptions, addSubscription, updateSubscription, deleteSubscription,
+    exportDataJSON, exportDataCSV, importDataJSON,
+    metrics, formatCurrency, resetData,
+  }), [
+    theme,
+    currency,
+    activeTab,
+    searchQuery,
+    isModalOpen,
+    modalType,
+    editingItem,
+    lastSaved,
+    transactions, addTransaction, updateTransaction, deleteTransaction, restoreTransaction, permanentDeleteTransaction,
+    categories, addCategory, updateCategory, deleteCategory,
+    budgets, updateBudget,
+    savingsGoals, addSavingsGoal, updateSavingsGoal, deleteSavingsGoal, depositToGoal,
+    subscriptions, addSubscription, updateSubscription, deleteSubscription,
+    exportDataJSON, exportDataCSV, importDataJSON,
+    metrics, formatCurrency, resetData,
+  ]);
 
   return (
-    <FinanceContext.Provider value={{
-      theme, setTheme, currency, setCurrency,
-      activeTab, setActiveTab, searchQuery, setSearchQuery,
-      isModalOpen, setIsModalOpen, modalType, setModalType,
-      editingItem, setEditingItem, lastSaved,
-      transactions, addTransaction, updateTransaction, deleteTransaction, restoreTransaction, permanentDeleteTransaction,
-      categories, setCategories, budgets, updateBudget,
-      savingsGoals, addSavingsGoal, updateSavingsGoal, deleteSavingsGoal, depositToGoal,
-      subscriptions, addSubscription, updateSubscription, deleteSubscription,
-      exportDataJSON, exportDataCSV, importDataJSON,
-      metrics, formatCurrency, resetData,
-    }}>
-
+    <FinanceContext.Provider value={contextValue}>
       {children}
     </FinanceContext.Provider>
   );
 };
 
-export const useFinance = () => useContext(FinanceContext);
+export const useFinance = () => {
+  const context = useContext(FinanceContext);
+  if (!context) {
+    throw new Error('useFinance must be used within a FinanceProvider');
+  }
+  return context;
+};
+
 
 

@@ -1,5 +1,5 @@
 // src/views/Dashboard/Dashboard.jsx
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Chart, registerables } from 'chart.js';
 import { useFinance } from '../../context/FinanceContext';
 import Icon from '../../components/Icon/Icon';
@@ -8,60 +8,75 @@ Chart.register(...registerables);
 
 export default function Dashboard() {
   const { metrics, formatCurrency, transactions, categories, budgets, setActiveTab } = useFinance();
+  const cashFlowCanvasRef = useRef(null);
+  const donutCanvasRef = useRef(null);
+  const chartInstances = useRef({ cashFlow: null, donut: null });
+
+  const activeTransactions = useMemo(() => transactions.filter(t => !t.isDeleted), [transactions]);
 
   const categoryExpenses = useMemo(() => {
     const map = {};
-    transactions.filter(t => !t.isDeleted && t.type === 'expense').forEach(t => {
-      map[t.category] = (map[t.category] || 0) + Number(t.amount);
+    activeTransactions.filter(t => t.type === 'expense').forEach(t => {
+      map[t.category] = (map[t.category] || 0) + Number(t.amount || 0);
     });
     return Object.entries(map).map(([id, amount]) => {
-      const cat = categories.find(c => c.id === id) || { name: 'Autre', color: '#94a3b8' };
+      const cat = categories.find(c => c.id === id) || { name: 'Autre', color: '#94a3b8', icon: 'wallet' };
       return { ...cat, amount };
     }).sort((a, b) => b.amount - a.amount);
-  }, [transactions, categories]);
+  }, [activeTransactions, categories]);
 
   useEffect(() => {
-    const barEl = document.getElementById('cashFlowChart');
-    if (!barEl) return;
-    if (window._cashFlow) window._cashFlow.destroy();
-    window._cashFlow = new Chart(barEl, {
-      type: 'bar',
-      data: {
-        labels: ['Jan','Fév','Mar','Avr','Mai','Juin','Juil','Août'],
-        datasets: [
-          { label: 'Revenus (€)', data: [2800,3100,2900,3400,3200,3350,3100,metrics.totalIncome], backgroundColor: '#10b981', borderRadius: 6 },
-          { label: 'Dépenses (€)', data: [1900,2100,1850,2300,1950,2200,2050,metrics.totalExpense], backgroundColor: '#f43f5e', borderRadius: 6 },
-        ],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: '#93c5fd', font: { family: 'Plus Jakarta Sans', weight: '600' } } } },
-        scales: {
-          x: { ticks: { color: '#4e7098' }, grid: { display: false } },
-          y: { ticks: { color: '#4e7098' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+    if (cashFlowCanvasRef.current) {
+      if (chartInstances.current.cashFlow) {
+        chartInstances.current.cashFlow.destroy();
+      }
+      chartInstances.current.cashFlow = new Chart(cashFlowCanvasRef.current, {
+        type: 'bar',
+        data: {
+          labels: ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août'],
+          datasets: [
+            { label: 'Revenus (€)', data: [2800, 3100, 2900, 3400, 3200, 3350, 3100, metrics.totalIncome], backgroundColor: '#10b981', borderRadius: 6 },
+            { label: 'Dépenses (€)', data: [1900, 2100, 1850, 2300, 1950, 2200, 2050, metrics.totalExpense], backgroundColor: '#f43f5e', borderRadius: 6 },
+          ],
         },
-      },
-    });
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 300 },
+          plugins: { legend: { labels: { color: '#93c5fd', font: { family: 'Plus Jakarta Sans', weight: '600' } } } },
+          scales: {
+            x: { ticks: { color: '#4e7098' }, grid: { display: false } },
+            y: { ticks: { color: '#4e7098' }, grid: { color: 'rgba(255,255,255,0.04)' } },
+          },
+        },
+      });
+    }
 
-    const donutEl = document.getElementById('categoryDonut');
-    if (!donutEl) return;
-    if (window._donut) window._donut.destroy();
-    const top = categoryExpenses.slice(0, 5);
-    window._donut = new Chart(donutEl, {
-      type: 'doughnut',
-      data: {
-        labels: top.map(c => c.name),
-        datasets: [{ data: top.map(c => c.amount), backgroundColor: top.map(c => c.color), borderWidth: 0 }],
-      },
-      options: {
-        responsive: true, maintainAspectRatio: false, cutout: '72%',
-        plugins: { legend: { position: 'bottom', labels: { color: '#93c5fd', boxWidth: 12 } } },
-      },
-    });
+    if (donutCanvasRef.current) {
+      if (chartInstances.current.donut) {
+        chartInstances.current.donut.destroy();
+      }
+      const top = categoryExpenses.slice(0, 5);
+      chartInstances.current.donut = new Chart(donutCanvasRef.current, {
+        type: 'doughnut',
+        data: {
+          labels: top.map(c => c.name),
+          datasets: [{ data: top.map(c => c.amount), backgroundColor: top.map(c => c.color), borderWidth: 0 }],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: '72%',
+          animation: { duration: 300 },
+          plugins: { legend: { position: 'bottom', labels: { color: '#93c5fd', boxWidth: 12 } } },
+        },
+      });
+    }
 
+    const currentCharts = chartInstances.current;
     return () => {
-      window._cashFlow?.destroy();
-      window._donut?.destroy();
+      currentCharts.cashFlow?.destroy();
+      currentCharts.donut?.destroy();
     };
   }, [metrics, categoryExpenses]);
 
@@ -96,7 +111,7 @@ export default function Dashboard() {
               <span className="card-subtitle">Comparatif Revenus vs Dépenses</span>
             </div>
           </div>
-          <div className="chart-container"><canvas id="cashFlowChart" /></div>
+          <div className="chart-container"><canvas ref={cashFlowCanvasRef} /></div>
         </div>
         <div className="card">
           <div className="card-header">
@@ -105,7 +120,7 @@ export default function Dashboard() {
               <span className="card-subtitle">Top catégories ce mois</span>
             </div>
           </div>
-          <div className="chart-container"><canvas id="categoryDonut" /></div>
+          <div className="chart-container"><canvas ref={donutCanvasRef} /></div>
         </div>
       </div>
 
@@ -122,7 +137,7 @@ export default function Dashboard() {
             <table className="data-table">
               <thead><tr><th>Intitulé</th><th>Catégorie</th><th>Date</th><th>Montant</th></tr></thead>
               <tbody>
-                {transactions.filter(t => !t.isDeleted).slice(0, 5).map(tx => {
+                {activeTransactions.slice(0, 5).map(tx => {
                   const cat = categories.find(c => c.id === tx.category) || { name: 'Général', color: '#94a3b8', icon: 'wallet' };
                   return (
                     <tr key={tx.id}>
@@ -148,8 +163,8 @@ export default function Dashboard() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
             {budgets.slice(0, 4).map(bgt => {
               const cat = categories.find(c => c.id === bgt.categoryId) || { name: 'Cat.', color: '#6366f1' };
-              const spent = transactions.filter(t => !t.isDeleted && t.type === 'expense' && t.category === bgt.categoryId).reduce((s, t) => s + Number(t.amount), 0);
-              const pct = Math.min(100, Math.round((spent / bgt.target) * 100));
+              const spent = activeTransactions.filter(t => t.type === 'expense' && t.category === bgt.categoryId).reduce((s, t) => s + Number(t.amount || 0), 0);
+              const pct = Math.min(100, Math.round((spent / (bgt.target || 1)) * 100));
               const barColor = pct >= 95 ? 'var(--accent-danger)' : pct > 75 ? 'var(--accent-warning)' : 'var(--accent-success)';
               return (
                 <div key={bgt.id}>
@@ -169,3 +184,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

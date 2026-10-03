@@ -5,11 +5,11 @@ import Icon from '../Icon/Icon';
 
 // ── Transaction Form ─────────────────────────────────────
 function TransactionForm({ item, onClose }) {
-  const { categories, addTransaction, updateTransaction } = useFinance();
+  const { categories, addTransaction, updateTransaction, setModalType, setEditingItem } = useFinance();
   const [type, setType]         = useState(item?.type || 'expense');
   const [title, setTitle]       = useState(item?.title || '');
   const [amount, setAmount]     = useState(item?.amount || '');
-  const [category, setCategory] = useState(item?.category || categories[0]?.id);
+  const [category, setCategory] = useState(item?.category || categories.find(c => c.type === (item?.type || 'expense'))?.id || categories[0]?.id);
   const [date, setDate]         = useState(item?.date || new Date().toISOString().split('T')[0]);
   const [note, setNote]         = useState(item?.note || '');
 
@@ -21,15 +21,20 @@ function TransactionForm({ item, onClose }) {
     onClose();
   };
 
+  const handleCreateCategory = () => {
+    setEditingItem(null);
+    setModalType('category');
+  };
+
   return (
     <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
       <div className="type-toggle">
-        <button type="button" className={`type-toggle-btn ${type === 'expense' ? 'active-expense' : ''}`} onClick={() => setType('expense')}>Dépense</button>
-        <button type="button" className={`type-toggle-btn ${type === 'income'  ? 'active-income'  : ''}`} onClick={() => setType('income')}>Revenu</button>
+        <button type="button" className={`type-toggle-btn ${type === 'expense' ? 'active-expense' : ''}`} onClick={() => { setType('expense'); const firstExp = categories.find(c => c.type === 'expense'); if (firstExp) setCategory(firstExp.id); }}>Dépense</button>
+        <button type="button" className={`type-toggle-btn ${type === 'income'  ? 'active-income'  : ''}`} onClick={() => { setType('income'); const firstInc = categories.find(c => c.type === 'income'); if (firstInc) setCategory(firstInc.id); }}>Revenu</button>
       </div>
       <div className="form-group">
         <label className="form-label">Titre de l'opération</label>
-        <input className="form-input" type="text" placeholder="ex: Courses Carrefour" value={title} onChange={e => setTitle(e.target.value)} required />
+        <input className="form-input" type="text" placeholder="ex: Courses, Commande AliExpress, Jeux PC…" value={title} onChange={e => setTitle(e.target.value)} required />
       </div>
       <div className="form-row">
         <div className="form-group">
@@ -42,7 +47,13 @@ function TransactionForm({ item, onClose }) {
         </div>
       </div>
       <div className="form-group">
-        <label className="form-label">Catégorie</label>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '.3rem' }}>
+          <label className="form-label" style={{ margin: 0 }}>Catégorie</label>
+          <button type="button" onClick={handleCreateCategory} style={{ background: 'none', border: 'none', color: 'var(--accent-primary)', fontSize: '.78rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '.25rem' }}>
+            <Icon name="plus" size={13} />
+            <span>Créer une catégorie</span>
+          </button>
+        </div>
         <select className="form-select" value={category} onChange={e => setCategory(e.target.value)}>
           {categories.filter(c => c.type === type).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
@@ -53,6 +64,171 @@ function TransactionForm({ item, onClose }) {
       </div>
       <button className="btn-primary" type="submit" style={{ justifyContent: 'center' }}>
         {item ? 'Enregistrer les modifications' : 'Ajouter la transaction'}
+      </button>
+    </form>
+  );
+}
+
+// ── Category Form ─────────────────────────────────────────
+function CategoryForm({ item, onClose }) {
+  const { addCategory, updateCategory } = useFinance();
+  const [name, setName]   = useState(item?.name || '');
+  const [type, setType]   = useState(item?.type || 'expense');
+  const [color, setColor] = useState(item?.color || '#ff6e00');
+  const [icon, setIcon]   = useState(item?.icon || 'shopping-bag');
+
+  React.useEffect(() => {
+    if (item) {
+      setName(item.name || '');
+      setType(item.type || 'expense');
+      setColor(item.color || '#ff6e00');
+      setIcon(item.icon || 'shopping-bag');
+    } else {
+      setName('');
+      setType('expense');
+      setColor('#ff6e00');
+      setIcon('shopping-bag');
+    }
+  }, [item]);
+
+  const COLOR_PRESETS = [
+    '#ff6e00', '#f97316', '#f59e0b', '#10b981', '#14b8a6',
+    '#06b6d4', '#3b82f6', '#6366f1', '#8b5cf6', '#ec4899', '#f43f5e'
+  ];
+
+  const ICON_PRESETS = [
+    { id: 'package', label: 'Colis / AliExpress' },
+    { id: 'gamepad', label: 'Jeux PC / Gaming' },
+    { id: 'shopping-bag', label: 'Shopping' },
+    { id: 'laptop', label: 'Tech' },
+    { id: 'home', label: 'Logement' },
+    { id: 'car', label: 'Transport' },
+    { id: 'film', label: 'Loisirs' },
+    { id: 'tv', label: 'Abonnements' },
+    { id: 'heart-pulse', label: 'Santé' },
+    { id: 'wallet', label: 'Portefeuille' },
+    { id: 'briefcase', label: 'Travail' },
+    { id: 'trending-up', label: 'Investissement' },
+    { id: 'music', label: 'Musique' },
+    { id: 'plane', label: 'Voyage' },
+    { id: 'cloud', label: 'Cloud' },
+    { id: 'wifi', label: 'Internet' },
+    { id: 'piggy-bank', label: 'Épargne' },
+    { id: 'shield-check', label: 'Sécurité' },
+  ];
+
+  const submit = e => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    const catData = { name: name.trim(), type, color, icon };
+    if (item?.id) {
+      updateCategory(item.id, catData);
+    } else {
+      addCategory(catData);
+    }
+    onClose();
+  };
+
+  return (
+    <form onSubmit={submit} style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+      <div className="type-toggle">
+        <button type="button" className={`type-toggle-btn ${type === 'expense' ? 'active-expense' : ''}`} onClick={() => setType('expense')}>Dépense</button>
+        <button type="button" className={`type-toggle-btn ${type === 'income'  ? 'active-income'  : ''}`} onClick={() => setType('income')}>Revenu</button>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Nom de la catégorie</label>
+        <input
+          className="form-input"
+          type="text"
+          placeholder="ex: AliExpress, Jeux PC, Vêtements, Resto…"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          required
+          autoFocus
+        />
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Couleur</label>
+        <div style={{ display: 'flex', gap: '.45rem', flexWrap: 'wrap', alignItems: 'center' }}>
+          {COLOR_PRESETS.map(c => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setColor(c)}
+              style={{
+                width: 28,
+                height: 28,
+                borderRadius: '50%',
+                backgroundColor: c,
+                border: color === c ? '2.5px solid #fff' : '2px solid transparent',
+                boxShadow: color === c ? '0 0 10px ' + c : 'none',
+                cursor: 'pointer',
+                transform: color === c ? 'scale(1.15)' : 'scale(1)',
+                transition: 'all .15s ease'
+              }}
+            />
+          ))}
+          <input
+            type="color"
+            value={color}
+            onChange={e => setColor(e.target.value)}
+            style={{ width: 32, height: 32, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}
+            title="Choisir une couleur personnalisée"
+          />
+        </div>
+      </div>
+
+      <div className="form-group">
+        <label className="form-label">Icône représentative</label>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(42px, 1fr))',
+          gap: '.45rem',
+          maxHeight: 140,
+          overflowY: 'auto',
+          padding: '.35rem',
+          background: 'rgba(0,0,0,0.2)',
+          borderRadius: 8,
+          border: '1px solid var(--border-color)'
+        }}>
+          {ICON_PRESETS.map(ic => (
+            <button
+              key={ic.id}
+              type="button"
+              onClick={() => setIcon(ic.id)}
+              title={ic.label}
+              style={{
+                height: 40,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: 6,
+                border: icon === ic.id ? `2px solid ${color}` : '1px solid transparent',
+                background: icon === ic.id ? `${color}25` : 'transparent',
+                color: icon === ic.id ? color : 'var(--text-secondary)',
+                cursor: 'pointer',
+                transition: 'all .15s ease'
+              }}
+            >
+              <Icon name={ic.id} size={20} />
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Preview Pill */}
+      <div style={{ padding: '.6rem .9rem', background: 'var(--bg-input)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: '.8rem', color: 'var(--text-muted)' }}>Aperçu :</span>
+        <span className="category-pill" style={{ color: color, fontSize: '.9rem', fontWeight: 700 }}>
+          <Icon name={icon} size={15} />
+          <span>{name || 'Nouvelle Catégorie'}</span>
+        </span>
+      </div>
+
+      <button className="btn-primary" type="submit" style={{ justifyContent: 'center' }}>
+        {item?.id ? 'Enregistrer les modifications' : 'Créer la catégorie'}
       </button>
     </form>
   );
@@ -241,6 +417,7 @@ function HistoryModalContent({ item, onClose }) {
 // ── Modal Manager ─────────────────────────────────────────
 const TITLES = {
   transaction:  item => item ? 'Modifier Transaction' : 'Nouvelle Transaction',
+  category:     item => item ? 'Modifier la Catégorie' : 'Nouvelle Catégorie',
   budget:       () => 'Définir un Budget',
   savings:      () => "Nouveau Projet d'Épargne",
   subscription: item => item ? "Modifier l'Abonnement" : 'Ajouter un Abonnement',
@@ -261,6 +438,7 @@ export default function Modal() {
           <button className="icon-button" onClick={close}><Icon name="x" size={18} /></button>
         </div>
         {modalType === 'transaction'  && <TransactionForm  item={editingItem} onClose={close} />}
+        {modalType === 'category'     && <CategoryForm     item={editingItem} onClose={close} />}
         {modalType === 'budget'       && <BudgetForm       item={editingItem} onClose={close} />}
         {modalType === 'savings'      && <SavingsForm      onClose={close} />}
         {modalType === 'deposit'      && <DepositForm      goal={editingItem} onClose={close} />}
@@ -270,4 +448,5 @@ export default function Modal() {
     </div>
   );
 }
+
 

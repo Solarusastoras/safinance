@@ -12,17 +12,27 @@ body {
   color: var(--text-primary);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
-  background:
-    radial-gradient(ellipse 80% 50% at 18% -5%, rgba(56,189,248,.22) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 88% 110%, rgba(2,132,199,.18) 0%, transparent 55%),
-    radial-gradient(ellipse 100% 80% at 50% 42%, #0c2254 0%, #04111e 55%, #020a14 100%);
-  background-attachment: fixed;
+  background-color: var(--bg-app);
+  position: relative;
 
-  &[data-theme-body="dark"]   { background: #07090f; }
-  &[data-theme-body="light"]  { background: #f0f4f8; }
-  &[data-theme-body="forest"] { background: #0a130d; }
-  &[data-theme-body="sunset"] { background: #0f0a06; }
-  &[data-theme-body="galaxy"] { background: #05030f; }
+  &::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+      radial-gradient(ellipse 80% 50% at 18% -5%, rgba(56,189,248,.18) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 88% 110%, rgba(2,132,199,.15) 0%, transparent 55%),
+      radial-gradient(ellipse 100% 80% at 50% 42%, #0c2254 0%, #04111e 55%, #020a14 100%);
+    transform: translateZ(0);
+  }
+
+  &[data-theme-body="dark"]::before   { background: #07090f; }
+  &[data-theme-body="light"]::before  { background: #f0f4f8; }
+  &[data-theme-body="forest"]::before { background: #0a130d; }
+  &[data-theme-body="sunset"]::before { background: #0f0a06; }
+  &[data-theme-body="galaxy"]::before { background: #05030f; }
 }
 
 // ── App layout ─────────────────────────────────────────────
@@ -48,20 +58,22 @@ body {
 .page-content {
   padding: 1.75rem 2rem;
   flex: 1;
-  animation: pageFadeIn .3s v.$ease;
+  animation: pageFadeIn .2s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, transform;
 
   @media (max-width: 900px) { padding: 1rem .85rem; }
 }
 
 @keyframes pageFadeIn {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0.15; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 // ── Shared card ────────────────────────────────────────────
 .card {
   background: var(--bg-card);
-  backdrop-filter: blur(16px) saturate(130%);
+  backdrop-filter: blur(12px) saturate(120%);
+  -webkit-backdrop-filter: blur(12px) saturate(120%);
   border: 1px solid var(--border-color);
   border-radius: var(--radius-lg);
   padding: 1.4rem 1.5rem;
@@ -69,7 +81,7 @@ body {
   flex-direction: column;
   position: relative;
   overflow: hidden;
-  transition: var(--transition);
+  transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 
   &::before {
     content: '';
